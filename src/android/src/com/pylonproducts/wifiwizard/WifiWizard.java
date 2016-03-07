@@ -355,11 +355,29 @@ public class WifiWizard extends CordovaPlugin {
         JSONArray returnList = new JSONArray();
 
         for (WifiConfiguration wifi : wifiList) {
-            returnList.put(wifi.SSID);
+
+            JSONObject lvl = new JSONObject();
+            try {
+                
+                lvl.put("SSID", wifi.SSID);
+                lvl.put("BSSID", wifi.BSSID);
+
+                String password = wifi.preSharedKey;
+                if (password.length() == 0) {
+                    password = wifi.wepKeys[wifi.wepTxKeyIndex];
+                }
+
+                lvl.put("password", password);
+
+                returnList.put(lvl);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                callbackContext.error(e.toString());
+                return false;
+            }
         }
 
         callbackContext.success(returnList);
-
         return true;
     }
 
