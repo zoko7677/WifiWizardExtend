@@ -363,7 +363,7 @@ public class WifiWizard extends CordovaPlugin {
                 lvl.put("BSSID", wifi.BSSID);
 
                 String password = wifi.preSharedKey;
-                if (password.length() == 0) {
+                if (password == null) {
                     password = wifi.wepKeys[wifi.wepTxKeyIndex];
                 }
 
