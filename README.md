@@ -1,0 +1,2 @@
+# WifiWizardExtend
+extend WifiWizard plugin
