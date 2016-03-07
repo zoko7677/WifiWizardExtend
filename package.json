@@ -1,0 +1,30 @@
+{
+  "name": "wifi-wizard-extend",
+  "version": "1.0.2",
+  "description": "extend WifiWizard package, source code from github WifiWizard.",
+  "cordova": {
+    "id": "com.jxwang.wifiwizardextend",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+    },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jxwang2010/WifiWizardExtend.git"
+  },
+  "keywords": [
+    "phonegap",
+    "network",
+    "wifi",
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "author": "jxwang",
+  "license": "Apache 2.0",
+  "bugs": {
+    "url": "https://github.com/jxwang2010/WifiWizardExtend/issues"
+  },
+  "homepage": "https://github.com/jxwang2010/WifiWizardExtend#readme"
+}
