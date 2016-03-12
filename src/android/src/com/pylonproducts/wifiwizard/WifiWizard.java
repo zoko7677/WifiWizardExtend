@@ -46,6 +46,7 @@ public class WifiWizard extends CordovaPlugin {
     private static final String IS_WIFI_ENABLED = "isWifiEnabled";
     private static final String SET_WIFI_ENABLED = "setWifiEnabled";
     private static final String TAG = "WifiWizard";
+    private static final String GET_CONNECTED_NETWORK = "getConnectedNetwork";
 
     private WifiManager wifiManager;
     private CallbackContext callbackContext;
@@ -98,6 +99,9 @@ public class WifiWizard extends CordovaPlugin {
         }
         else if(action.equals(GET_CONNECTED_SSID)) {
             return this.getConnectedSSID(callbackContext);
+        }
+        else if(action.equals(GET_CONNECTED_NETWORK)) {
+            return this.getConnectedNetwork(callbackContext);
         }
         else {
             callbackContext.error("Incorrect action parameter: " + action);
@@ -507,6 +511,46 @@ public class WifiWizard extends CordovaPlugin {
         }
 
         callbackContext.success(ssid);
+        return true;
+    }
+    
+    private boolean getConnectedNetwork(CallbackContext callbackContext){
+        if(!wifiManager.isWifiEnabled()){
+            callbackContext.error("Wifi is disabled");
+            return false;
+        }
+
+        WifiInfo info = wifiManager.getConnectionInfo();
+
+        if(info == null){
+            callbackContext.error("Unable to read wifi info");
+            return false;
+        }
+
+        String ssid = info.getSSID();
+        String bssid = info.getBSSID();
+        String macAddress = info.getMacAddress();
+        int ip = info.getIpAddress();
+        String ipAddress = String.format(
+        		   "%d.%d.%d.%d",
+        		   (ip & 0xff),
+        		   (ip >> 8 & 0xff),
+        		   (ip >> 16 & 0xff),
+        		   (ip >> 24 & 0xff));
+        
+        JSONObject lvl = new JSONObject();
+        try {
+        	lvl.put("SSID", ssid);
+        	lvl.put("BSSID", bssid);
+        	lvl.put("macAddress", macAddress);
+        	lvl.put("ipAddress", ipAddress);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            callbackContext.error(e.toString());
+            return false;
+        }
+
+        callbackContext.success(lvl);
         return true;
     }
 

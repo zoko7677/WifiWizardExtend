@@ -1,6 +1,6 @@
 {
   "name": "wifi-wizard-extend",
-  "version": "1.0.2",
+  "version": "1.0.15",
   "description": "extend WifiWizard package, source code from github WifiWizard.",
   "cordova": {
     "id": "com.jxwang.wifiwizardextend",
