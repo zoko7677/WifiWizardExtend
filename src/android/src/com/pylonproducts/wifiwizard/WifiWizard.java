@@ -15,7 +15,10 @@
 package com.pylonproducts.wifiwizard;
 
 import org.apache.cordova.*;
+import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.List;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,6 +33,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.SupplicantState;
 import android.content.Context;
 import android.util.Log;
+import android.net.ConnectivityManager;
 
 
 public class WifiWizard extends CordovaPlugin {
@@ -46,10 +50,11 @@ public class WifiWizard extends CordovaPlugin {
     private static final String IS_WIFI_ENABLED = "isWifiEnabled";
     private static final String SET_WIFI_ENABLED = "setWifiEnabled";
     private static final String TAG = "WifiWizard";
-    private static final String GET_CONNECTED_NETWORK = "getConnectedNetwork";
+	private static final String LOG_TAG = "WifiStatus";
 
     private WifiManager wifiManager;
     private CallbackContext callbackContext;
+	private Context mContext;
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -99,9 +104,6 @@ public class WifiWizard extends CordovaPlugin {
         }
         else if(action.equals(GET_CONNECTED_SSID)) {
             return this.getConnectedSSID(callbackContext);
-        }
-        else if(action.equals(GET_CONNECTED_NETWORK)) {
-            return this.getConnectedNetwork(callbackContext);
         }
         else {
             callbackContext.error("Incorrect action parameter: " + action);
@@ -272,9 +274,8 @@ public class WifiWizard extends CordovaPlugin {
         if (networkIdToConnect >= 0) {
             // We disable the network before connecting, because if this was the last connection before
             // a disconnect(), this will not reconnect.
-            //wifiManager.disconnect();
+            wifiManager.disableNetwork(networkIdToConnect);
             wifiManager.enableNetwork(networkIdToConnect, true);
-            //wifiManager.reconnect();
 
             SupplicantState supState;
             WifiInfo wifiInfo = wifiManager.getConnectionInfo();
@@ -359,29 +360,11 @@ public class WifiWizard extends CordovaPlugin {
         JSONArray returnList = new JSONArray();
 
         for (WifiConfiguration wifi : wifiList) {
-
-            JSONObject lvl = new JSONObject();
-            try {
-                
-                lvl.put("SSID", wifi.SSID);
-                lvl.put("BSSID", wifi.BSSID);
-
-                String password = wifi.preSharedKey;
-                if (password == null) {
-                    password = wifi.wepKeys[wifi.wepTxKeyIndex];
-                }
-
-                lvl.put("password", password);
-
-                returnList.put(lvl);
-            } catch (JSONException e) {
-                e.printStackTrace();
-                callbackContext.error(e.toString());
-                return false;
-            }
+            returnList.put(wifi.SSID);
         }
 
         callbackContext.success(returnList);
+
         return true;
     }
 
@@ -513,46 +496,6 @@ public class WifiWizard extends CordovaPlugin {
         callbackContext.success(ssid);
         return true;
     }
-    
-    private boolean getConnectedNetwork(CallbackContext callbackContext){
-        if(!wifiManager.isWifiEnabled()){
-            callbackContext.error("Wifi is disabled");
-            return false;
-        }
-
-        WifiInfo info = wifiManager.getConnectionInfo();
-
-        if(info == null){
-            callbackContext.error("Unable to read wifi info");
-            return false;
-        }
-
-        String ssid = info.getSSID();
-        String bssid = info.getBSSID();
-        String macAddress = info.getMacAddress();
-        int ip = info.getIpAddress();
-        String ipAddress = String.format(
-        		   "%d.%d.%d.%d",
-        		   (ip & 0xff),
-        		   (ip >> 8 & 0xff),
-        		   (ip >> 16 & 0xff),
-        		   (ip >> 24 & 0xff));
-        
-        JSONObject lvl = new JSONObject();
-        try {
-        	lvl.put("SSID", ssid);
-        	lvl.put("BSSID", bssid);
-        	lvl.put("macAddress", macAddress);
-        	lvl.put("ipAddress", ipAddress);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            callbackContext.error(e.toString());
-            return false;
-        }
-
-        callbackContext.success(lvl);
-        return true;
-    }
 
     /**
      * This method retrieves the current WiFi status
@@ -629,5 +572,41 @@ public class WifiWizard extends CordovaPlugin {
         }
         return false;
     }
-
+	
+	/*
+	* Edit by Zoko7677 - hoangminhweb@gmail.com	
+	*/
+	
+	/**
+    * check if  Mobile Data With SIM Enabled
+    */	 	
+    public boolean isMobileDataEnabled(CallbackContext callbackContext) {
+        try {
+            ConnectivityManager connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            Method method = connectivityManager.getClass().getMethod("getMobileDataEnabled");
+			Boolean isEnabled = method.invoke(connectivityManager);
+			callbackContext.success(isEnabled ? "1" : "0");
+            return isEnabled;
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Unkown error", e);
+        }
+        return false;
+    }
+	
+	/**
+     * set Mobile Data Enabled with SIM
+     *
+     * @param enabled true or false
+     */
+    public void setMobileDataEnabled(CallbackContext callbackContext, JSONArray data) {
+        try {
+			String enabled = data.getString(0);
+            ConnectivityManager connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            Method method = connectivityManager.getClass().getMethod("setMobileDataEnabled", boolean.class);
+            method.invoke(connectivityManager, enabled.equals("true"));
+			callbackContext.success();
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Unkown error.", e);
+        }
+    }
 }
